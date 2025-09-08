@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>موقع 30 سؤال</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans Arabic',sans-serif}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#071127 0%,var(--bg) 100%);color:#e6eef6;display:flex;flex-direction:column;align-items:center;padding:28px}
+    header{width:100%;max-width:1100px;margin-bottom:18px}
+    h1{margin:0 0 6px 0;font-size:20px}
+    p.lead{margin:0;color:var(--muted)}
+
+    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;width:100%;max-width:1100px;margin-top:18px}
+    .tile{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:10px;padding:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,0.03);transition:transform .12s,box-shadow .12s}
+    .tile:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    .tile.locked{opacity:.45;cursor:default}
+    .tile.disabled{opacity:.2;cursor:default}
+    .tile span{font-size:18px;font-weight:700}
+
+    main{width:100%;max-width:1100px}
+
+    .panel{display:none;background:var(--card);padding:18px;border-radius:12px;margin-top:18px;border:1px solid rgba(255,255,255,0.03)}
+    .panel.active{display:block}
+    .q-title{font-weight:700;margin-bottom:8px}
+    .choices{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .choice{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;color:#022;cursor:pointer;font-weight:700}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+
+    .result{display:none;padding:22px;border-radius:12px;margin-top:18px}
+    .result.show{display:block}
+    .result.correct{background:linear-gradient(90deg,rgba(16,185,129,0.12),rgba(16,185,129,0.06));border:1px solid rgba(16,185,129,0.18);color:var(--good)}
+    .result.wrong{background:linear-gradient(90deg,rgba(239,68,68,0.08),rgba(239,68,68,0.04));border:1px solid rgba(239,68,68,0.12);color:var(--bad)}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+
+    @media(max-width:900px){.grid{grid-template-columns:repeat(5,1fr)} }
+    @media(max-width:700px){.grid{grid-template-columns:repeat(4,1fr)} }
+    @media(max-width:480px){.grid{grid-template-columns:repeat(3,1fr)} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>اسئلة تدريب لاختبار القدرات اللفضي</h1>
+    <p class="lead">اختار رقم عشوائي</p>
+  </header>
+
+  <main>
+    <section class="grid" id="grid"></section>
+
+    <section class="panel" id="questionPanel">
+      <div class="q-title" id="qTitle">السؤال</div>
+      <div id="qBody"></div>
+      <div class="choices" id="choices"></div>
+      <div class="controls">
+        <button id="submitBtn">إرسال</button>
+        <button class="btn-ghost" id="backBtn">رجوع</button>
+      </div>
+    </section>
+
+    <section class="result correct" id="correctResult">
+      <h3>صح ✅</h3>
+      <p id="correctMsg">إجابتك صحيحة!</p>
+    </section>
+
+    <section class="result wrong" id="wrongResult">
+      <h3>خطأ ❌</h3>
+      <p id="wrongMsg">الإجابة خاطئة. سيتم قفل هذا السؤال مؤقتًا.</p>
+    </section>
+  </main>
+
+  <footer>تم الانشاء بواسطةالطالب : مراد ابراهيم | باشراف : د.ياسر محمد شعبان </footer>
+
+  <script>
+    // ======= EDIT QUESTIONS HERE ======
+    // كل سؤال يحتوي: id, question, choices (4 عناصر), answer (النص الصحيح), hint (اختياري)
+    let QUESTIONS = [
+      {id:1,question:'ما عاصمة السعودية؟',choices:['جدة','مكة','الرياض','الدمام'],answer:'الرياض',hint:'مدينة في الوسط'},
+      {id:2,question:'2 + 3 = ?',choices:['4','5','6','7'],answer:'5',hint:'أصغر من 6'}
+    ];
+    // ==================================
+
+    const grid=document.getElementById('grid');
+    const qPanel=document.getElementById('questionPanel');
+    const qTitle=document.getElementById('qTitle');
+    const qBody=document.getElementById('qBody');
+    const choicesEl=document.getElementById('choices');
+    const submitBtn=document.getElementById('submitBtn');
+    const backBtn=document.getElementById('backBtn');
+
+    const correctResult=document.getElementById('correctResult');
+    const wrongResult=document.getElementById('wrongResult');
+    const correctMsg=document.getElementById('correctMsg');
+    const wrongMsg=document.getElementById('wrongMsg');
+
+    let currentQuestion=null;
+    let currentChoiceIndex=null;
+    let lockedQuestions={};
+
+    function renderGrid(){
+      grid.innerHTML='';
+      for(let i=1;i<=30;i++){
+        const tile=document.createElement('div');
+        tile.className='tile';
+        const q=QUESTIONS.find(x=>x.id===i);
+        if(!q){tile.classList.add('locked');}
+        if(lockedQuestions[i] && lockedQuestions[i]>0){tile.classList.add('disabled');}
+        tile.innerHTML=`<span>${i}</span>`;
+        tile.addEventListener('click',()=>{ if(q && !(lockedQuestions[i]>0)) openQuestion(q); });
+        grid.appendChild(tile);
+      }
+    }
+
+    function openQuestion(q){
+      currentQuestion=q;
+      qTitle.textContent=`السؤال ${q.id}`;
+      qBody.textContent=q.question;
+      choicesEl.innerHTML='';
+      q.choices.forEach((c,idx)=>{
+        const d=document.createElement('div');
+        d.className='choice';
+        d.textContent=c;
+        d.dataset.idx=idx;
+        d.addEventListener('click',()=>{
+          document.querySelectorAll('.choice').forEach(x=>x.style.outline='');
+          d.style.outline='2px solid rgba(255,255,255,0.3)';
+          currentChoiceIndex=idx;
+        });
+        choicesEl.appendChild(d);
+      });
+      correctResult.classList.remove('show');
+      wrongResult.classList.remove('show');
+      qPanel.classList.add('active');
+    }
+
+    function checkAnswer(){
+      const q=currentQuestion; if(!q) return;
+      if(currentChoiceIndex===null){alert('اختر خيارًا');return;}
+      const selected=q.choices[currentChoiceIndex];
+      const ok=selected.trim().toLowerCase()===q.answer.trim().toLowerCase();
+      if(ok){
+        showCorrect(q);
+      } else {
+        showWrong(q);
+      }
+    }
+
+    function showCorrect(q){
+      correctResult.classList.add('show');
+      wrongResult.classList.remove('show');
+      // بعد الصح يرجع للشبكة
+      setTimeout(()=>{qPanel.classList.remove('active');correctResult.classList.remove('show');renderGrid();},1200);
+    }
+
+    function showWrong(q){
+      wrongResult.classList.add('show');
+      correctResult.classList.remove('show');
+      // يقفل السؤال مؤقتاً لسؤالين
+      lockedQuestions[q.id]=2;
+      setTimeout(()=>{qPanel.classList.remove('active');wrongResult.classList.remove('show');renderGrid();},1500);
+    }
+
+    function decreaseLocks(){
+      for(const id in lockedQuestions){
+        if(lockedQuestions[id]>0){lockedQuestions[id]--;}
+      }
+      renderGrid();
+    }
+
+    submitBtn.addEventListener('click',()=>{checkAnswer();decreaseLocks();});
+    backBtn.addEventListener('click',()=>{qPanel.classList.remove('active');});
+
+    renderGrid();
+  </script>
+</body>
+</html>
