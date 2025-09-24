@@ -3,177 +3,883 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>موقع 30 سؤال</title>
+  <title>الأسئلة اللفظية لاختبار القدرات</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--good:#10b981;--bad:#ef4444}
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans Arabic',sans-serif}
-    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#071127 0%,var(--bg) 100%);color:#e6eef6;display:flex;flex-direction:column;align-items:center;padding:28px}
-    header{width:100%;max-width:1100px;margin-bottom:18px}
-    h1{margin:0 0 6px 0;font-size:20px}
-    p.lead{margin:0;color:var(--muted)}
-
-    .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;width:100%;max-width:1100px;margin-top:18px}
-    .tile{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:10px;padding:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,0.03);transition:transform .12s,box-shadow .12s}
-    .tile:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(2,6,23,0.6)}
-    .tile.locked{opacity:.45;cursor:default}
-    .tile.disabled{opacity:.2;cursor:default}
-    .tile span{font-size:18px;font-weight:700}
-
-    main{width:100%;max-width:1100px}
-
-    .panel{display:none;background:var(--card);padding:18px;border-radius:12px;margin-top:18px;border:1px solid rgba(255,255,255,0.03)}
-    .panel.active{display:block}
-    .q-title{font-weight:700;margin-bottom:8px}
-    .choices{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-    .choice{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
-    .controls{display:flex;gap:8px;margin-top:12px}
-    button{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;color:#022;cursor:pointer;font-weight:700}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
-
-    .result{display:none;padding:22px;border-radius:12px;margin-top:18px}
-    .result.show{display:block}
-    .result.correct{background:linear-gradient(90deg,rgba(16,185,129,0.12),rgba(16,185,129,0.06));border:1px solid rgba(16,185,129,0.18);color:var(--good)}
-    .result.wrong{background:linear-gradient(90deg,rgba(239,68,68,0.08),rgba(239,68,68,0.04));border:1px solid rgba(239,68,68,0.12);color:var(--bad)}
-
-    footer{margin-top:18px;color:var(--muted);font-size:13px}
-
-    @media(max-width:900px){.grid{grid-template-columns:repeat(5,1fr)} }
-    @media(max-width:700px){.grid{grid-template-columns:repeat(4,1fr)} }
-    @media(max-width:480px){.grid{grid-template-columns:repeat(3,1fr)} }
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --accent: #06b6d4;
+      --muted: #94a3b8;
+      --good: #10b981;
+      --bad: #ef4444;
+      --text: #e6eef6;
+    }
+    
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans Arabic', sans-serif;
+    }
+    
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #071127 0%, var(--bg) 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    header {
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+    
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 24px;
+    }
+    
+    p.lead {
+      margin: 0;
+      color: var(--muted);
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 1100px;
+      margin-top: 18px;
+    }
+    
+    .tile {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 12px;
+      padding: 20px; /* تقليل الحشوة قليلاً */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.03);
+      transition: transform .12s, box-shadow .12s;
+      font-size: 28px; /* زيادة حجم الخط */
+      font-weight: 700;
+      position: relative;
+      aspect-ratio: 1/1; /* جعل الخلايا مربعة */
+      min-height: 100px; /* تحديد ارتفاع أدنى */
+      min-width: 100px; /* تحديد عرض أدنى */
+    }
+    
+    .tile:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+    }
+    
+    .tile.locked {
+      opacity: .45;
+      cursor: default;
+    }
+    
+    .tile.disabled {
+      opacity: .2;
+      cursor: default;
+    }
+    
+    .tile.correct::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: var(--good);
+      font-size: 20px;
+    }
+    
+    .tile.incorrect::after {
+      content: '✗';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: var(--bad);
+      font-size: 20px;
+    }
+    
+    .tile.to-review::after {
+      content: '↻';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: var(--accent);
+      font-size: 20px;
+    }
+    
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 20px;
+      background: var(--card);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      max-width: 1100px;
+      height: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 5px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+    
+    .timer {
+      background: var(--card);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: 700;
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    
+    .timer-icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+    
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+    
+    /* Modal styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    
+    .modal-backdrop.show {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--card);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(2,6,23,0.6);
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    
+    .modal h3 {
+      margin: 0 0 8px 0;
+    }
+    
+    .modal p {
+      margin: 6px 0;
+    }
+    
+    .modal .tips {
+      margin-top: 8px;
+      text-align: right;
+      color: var(--muted);
+    }
+    
+    .modal button {
+      margin-top: 12px;
+    }
+    
+    /* Question Modal */
+    .question-modal {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .question-modal .q-title {
+      font-size: 20px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+    
+    .question-modal .choices {
+      margin-top: 15px;
+    }
+    
+    .question-modal .controls {
+      margin-top: 20px;
+    }
+    
+    .choice {
+      background: rgba(255,255,255,0.02);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: .15s;
+      margin-bottom: 8px;
+      text-align: right;
+    }
+    
+    .choice:hover {
+      background: var(--accent);
+      color: #022;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      justify-content: center;
+    }
+    
+    button {
+      background: var(--accent);
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: #022;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      color: var(--muted);
+    }
+    
+    .hint-box {
+      background: rgba(6,182,212,0.1);
+      border-left: 3px solid var(--accent);
+      padding: 10px;
+      margin: 15px 0;
+      border-radius: 5px;
+      text-align: right;
+      font-size: 14px;
+    }
+    
+    @media(max-width:900px) {
+      .grid {
+        grid-template-columns: repeat(4,1fr);
+      }
+    }
+    
+    @media(max-width:700px) {
+      .grid {
+        grid-template-columns: repeat(3,1fr);
+      }
+    }
+    
+    @media(max-width:480px) {
+      .grid {
+        grid-template-columns: repeat(2,1fr);
+      }
+      .stats-bar {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .stat-item {
+        flex: 1 0 45%;
+      }
+      .tile {
+        padding: 15px;
+        font-size: 24px;
+        min-height: 80px;
+        min-width: 80px;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>اسئلة تدريب لاختبار القدرات اللفضي</h1>
-    <p class="lead">اختار رقم عشوائي</p>
+    <h1>الأسئلة اللفظية لاختبار القدرات</h1>
+    <p class="lead">اختر سؤالًا للبدء في التدريب</p>
   </header>
+
+  <!-- شريط الإحصائيات -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-value" id="totalQuestions">30</span>
+      <span class="stat-label">عدد الأسئلة</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" id="answeredQuestions">0</span>
+      <span class="stat-label">تم الإجابة</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" id="correctAnswers">0</span>
+      <span class="stat-label">الإجابات الصحيحة</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" id="scorePercentage">0%</span>
+      <span class="stat-label">النسبة المئوية</span>
+    </div>
+  </div>
+
+  <!-- شريط التقدم -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+
+  <!-- مؤقت -->
+  <div class="timer">
+    <svg class="timer-icon" viewBox="0 0 24 24">
+      <path d="M12 22c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm1-4h-2v2h2V4zm0 10h-2v-5h2v5z"/>
+    </svg>
+    <span id="timerValue">00:00</span>
+  </div>
 
   <main>
     <section class="grid" id="grid"></section>
+  </main>
 
-    <section class="panel" id="questionPanel">
+  <footer>تم الانشاء بواسطة الطالب : مراد ابراهيم | باشراف : د.ياسر محمد شعبان </footer>
+
+  <!-- نافذة النتائج -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="resultModal">
+      <h3 id="modalTitle">نتيجة</h3>
+      <p id="modalMessage"></p>
+      <div class="tips" id="modalTips"></div>
+      <div style="text-align:center">
+        <button id="modalClose">حسناً</button>
+        <button class="btn-ghost" id="nextQuestion" style="display: none;">السؤال التالي</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- نافذة الأسئلة -->
+  <div class="modal-backdrop" id="questionModalBackdrop">
+    <div class="question-modal" id="questionModal">
       <div class="q-title" id="qTitle">السؤال</div>
       <div id="qBody"></div>
       <div class="choices" id="choices"></div>
+      
+      <!-- صندوق التلميح -->
+      <div class="hint-box" id="hintBox" style="display: none;">
+        <strong>تلميح:</strong> <span id="hintText"></span>
+      </div>
+      
       <div class="controls">
         <button id="submitBtn">إرسال</button>
+        <button class="btn-ghost" id="hintBtn">طلب تلميح</button>
         <button class="btn-ghost" id="backBtn">رجوع</button>
       </div>
-    </section>
-
-    <section class="result correct" id="correctResult">
-      <h3>صح ✅</h3>
-      <p id="correctMsg">إجابتك صحيحة!</p>
-    </section>
-
-    <section class="result wrong" id="wrongResult">
-      <h3>خطأ ❌</h3>
-      <p id="wrongMsg">الإجابة خاطئة. سيتم قفل هذا السؤال مؤقتًا.</p>
-    </section>
-  </main>
-
-  <footer>تم الانشاء بواسطةالطالب : مراد ابراهيم | باشراف : د.ياسر محمد شعبان </footer>
+    </div>
+  </div>
 
   <script>
-    // ======= EDIT QUESTIONS HERE ======
-    // كل سؤال يحتوي: id, question, choices (4 عناصر), answer (النص الصحيح), hint (اختياري)
-    let QUESTIONS = [
-      {id:1,question:'ما عاصمة السعودية؟',choices:['جدة','مكة','الرياض','الدمام'],answer:'الرياض',hint:'مدينة في الوسط'},
-      {id:2,question:'2 + 3 = ?',choices:['4','5','6','7'],answer:'5',hint:'أصغر من 6'}
-    ];
-    // ==================================
+    // الأسئلة اللفظية لاختبار القدرات (30 سؤال)
+let QUESTIONS = [
+  // ------------------ (أسئلة الفاعل ونائب الفاعل) ------------------
+  {
+    id: 1,
+    question: 'في الجملة "كتب الطالبُ الدرسَ"، من الفاعل؟',
+    choices: ['الدرس', 'الطالب', 'كتب', 'لا يوجد فاعل'],
+    answer: 'الطالب',
+    hint: 'الفاعل هو من قام بالفعل',
+    category: 'نحو'
+  },
+  {
+    id: 2,
+    question: 'في الجملة "تم بناءُ المدرسةِ بسرعةٍ"، نائب الفاعل هو:',
+    choices: ['المدرسة', 'البناء', 'تم', 'بسرعة'],
+    answer: 'المدرسة',
+    hint: 'ابحث عن ما ناب عن الفاعل في المبني للمجهول',
+    category: 'نحو'
+  },
+  {
+    id: 3,
+    question: 'ما الفاعل في الجملة: "أكل الطفل التفاحةَ"؟',
+    choices: ['التفاحة', 'الطفل', 'أكل', 'لا يوجد فاعل'],
+    answer: 'الطفل',
+    hint: 'من الذي قام بالفعل؟',
+    category: 'نحو'
+  },
+  {
+    id: 4,
+    question: 'ما هو نائب الفاعل في الجملة: "شُرب العصيرُ بسرعة"؟',
+    choices: ['العصير', 'شرب', 'بسرعة', 'لا يوجد نائب فاعل'],
+    answer: 'العصير',
+    hint: 'ما وقع عليه الفعل في المبني للمجهول',
+    category: 'نحو'
+  },
+  {
+    id: 5,
+    question: 'حول الجملة "زرع الفلاحُ الحقلَ" إلى المبني للمجهول:',
+    choices: ['الحقل زرع الفلاحُ', 'زرع الحقلُ الفلاحُ', 'زُرع الحقلُ', 'الحقل زُرع الفلاحُ'],
+    answer: 'زُرع الحقلُ',
+    hint: 'حوّل الفعل إلى المبني للمجهول واجعل المفعول نائب فاعل',
+    category: 'نحو'
+  },
+  {
+    id: 6,
+    question: 'في الجملة "تم تصليح السيارة"، نائب الفاعل هو:',
+    choices: ['تم', 'تصليح', 'السيارة', 'لا يوجد نائب فاعل'],
+    answer: 'السيارة',
+    hint: 'من الذي وقع عليه الفعل بعد البناء للمجهول؟',
+    category: 'نحو'
+  },
+  {
+    id: 7,
+    question: 'اختر الجملة المبنية للمجهول:',
+    choices: ['كتب الكاتبُ الروايةَ', 'كُتبت الروايةُ بواسطة الكاتبِ', 'يكتب الكاتبُ الروايةَ', 'سيكتب الكاتبُ الروايةَ'],
+    answer: 'كُتبت الروايةُ بواسطة الكاتبِ',
+    hint: 'ابحث عن الجملة التي تحول الفعل إلى المبني للمجهول',
+    category: 'نحو'
+  },
+  {
+    id: 8,
+    question: 'في الجملة "سافر المسافرُ إلى المدينة"، الفاعل هو:',
+    choices: ['المسافر', 'المدينة', 'سافر', 'لا يوجد فاعل'],
+    answer: 'المسافر',
+    hint: 'من قام بالفعل؟',
+    category: 'نحو'
+  },
+  {
+    id: 9,
+    question: 'ما نوع الفاعل في الجملة: "اشتريتُ الكتابَ"؟',
+    choices: ['ضمير', 'اسم ظاهر', 'كلمة مبنية', 'لا يوجد فاعل'],
+    answer: 'ضمير',
+    hint: 'الفاعل ضمير مستتر يعود على المتكلم',
+    category: 'نحو'
+  },
+  {
+    id: 10,
+    question: 'في الجملة "تم تنظيفُ الغرفةِ"، ما هو الفعل المبني للمجهول؟',
+    choices: ['تم', 'تنظيف', 'الغرفة', 'تم تنظيف'],
+    answer: 'تنظيف',
+    hint: 'الفعل المبني للمجهول هو ما دُل على وقوعه دون فاعل',
+    category: 'نحو'
+  },
+  {
+    id: 11,
+    question: 'حول الجملة "قرأ الطالبُ الكتابَ" إلى المبني للمجهول:',
+    choices: ['قُرأ الكتابُ', 'الكتابُ قرأه الطالبُ', 'قرأ الكتابُ الطالبُ', 'تم قراءة الطالبَ'],
+    answer: 'قُرأ الكتابُ',
+    hint: 'حوّل الفعل للضم المبني للمجهول واجعل المفعول نائب فاعل',
+    category: 'نحو'
+  },
+  {
+    id: 12,
+    question: 'في الجملة "أعدّ الطباخُ الطعامَ"، ما الفاعل؟',
+    choices: ['الطعام', 'الطباخ', 'أعدّ', 'لا يوجد فاعل'],
+    answer: 'الطباخ',
+    hint: 'من قام بالفعل؟',
+    category: 'نحو'
+  },
+  {
+    id: 13,
+    question: 'اختر الجملة التي تحتوي على نائب فاعل:',
+    choices: ['حضر المعلمُ الدرسَ', 'حُضر الدرسُ', 'حضر الدرسُ المعلمُ', 'لا شيء مما ذكر'],
+    answer: 'حُضر الدرسُ',
+    hint: 'المبني للمجهول دائماً فيه نائب فاعل',
+    category: 'نحو'
+  },
+  {
+    id: 14,
+    question: 'في الجملة "تُقرأ القصصُ للأطفال"، نائب الفاعل هو:',
+    choices: ['القصص', 'الأطفال', 'تُقرأ', 'لا يوجد نائب فاعل'],
+    answer: 'القصص',
+    hint: 'من الذي ناب عن الفاعل بعد البناء للمجهول؟',
+    category: 'نحو'
+  },
+  {
+    id: 15,
+    question: 'في الجملة "كتب الطالبُ الواجبَ"، ما نوع الفاعل؟',
+    choices: ['ضمير مستتر', 'اسم ظاهر', 'نائب فاعل', 'لا يوجد فاعل'],
+    answer: 'اسم ظاهر',
+    hint: 'الفاعل هنا مذكور صراحة',
+    category: 'نحو'
+  },
 
-    const grid=document.getElementById('grid');
-    const qPanel=document.getElementById('questionPanel');
-    const qTitle=document.getElementById('qTitle');
-    const qBody=document.getElementById('qBody');
-    const choicesEl=document.getElementById('choices');
-    const submitBtn=document.getElementById('submitBtn');
-    const backBtn=document.getElementById('backBtn');
+  // ------------------ (أسئلة أسلوب الشرط الجازم) ------------------
+  {
+    id: 16,
+    question: 'ما هي أداة الشرط الجازمة في جملة "متى تذاكر دروسك تنجح"؟',
+    choices: ['إذا', 'متى', 'لو', 'إن'],
+    answer: 'متى',
+    hint: 'ابحث عن أداة الشرط',
+    category: 'شرط'
+  },
+  {
+    id: 17,
+    question: 'أي من الجمل التالية تحتوي على أسلوب شرط جازم صحيح؟',
+    choices: ['إن تدرس بجد سوف تنجح', 'من يساعد الناس يكافئه الله', 'لو درست لنجحت', 'إذا جاء الصيف نسافر'],
+    answer: 'من يساعد الناس يكافئه الله',
+    hint: 'الشرط الجازم يتكون من أداة شرط + فعل شرط + جواب شرط',
+    category: 'شرط'
+  },
+  {
+    id: 18,
+    question: 'ما هو فعل الشرط في جملة "من يجتهد يحصد النجاح"؟',
+    choices: ['من', 'يحصد', 'يجتهد', 'النجاح'],
+    answer: 'يجتهد',
+    hint: 'ابحث عن الفعل الواقع بعد أداة الشرط',
+    category: 'شرط'
+  },
+  {
+    id: 19,
+    question: 'في أي جملة وردت "إن" الشرطية الجازمة؟',
+    choices: ['إن الطالب مجتهد', 'إن تصبر تظفر', 'إن الجو جميل', 'إنّ العلم نور'],
+    answer: 'إن تصبر تظفر',
+    hint: 'انتبه لا تخلط بين "إن" الشرطية و"إنّ" الناصبة',
+    category: 'شرط'
+  },
+  {
+    id: 20,
+    question: 'ما جواب الشرط في جملة "مهما تفعل من خير تجده"؟',
+    choices: ['مهما', 'تفعل', 'من خير', 'تجده'],
+    answer: 'تجده',
+    hint: 'الجواب يأتي بعد فعل الشرط مباشرة',
+    category: 'شرط'
+  },
+  {
+    id: 21,
+    question: 'أي من الأدوات التالية ليست من أدوات الشرط الجازمة؟',
+    choices: ['متى', 'من', 'لو', 'ما'],
+    answer: 'لو',
+    hint: 'ليست من أدوات الشرط الجازمة بل من غير الجازمة',
+    category: 'شرط'
+  },
+  {
+    id: 22,
+    question: 'في جملة "أينما تذهب أذهب معك"، ما نوع "أينما"؟',
+    choices: ['ظرف مكان', 'أداة شرط جازمة', 'حرف عطف', 'اسم موصول'],
+    answer: 'أداة شرط جازمة',
+    hint: 'تدل على الشرط مع معنى المكان',
+    category: 'شرط'
+  },
+  {
+    id: 23,
+    question: 'ما الإعراب الصحيح لكلمة "تدرس" في جملة "إن تدرس تنجح"؟',
+    choices: ['فعل مضارع مرفوع', 'فعل مضارع مجزوم لأنه فعل الشرط', 'فعل ماضي مبني', 'فعل أمر مبني'],
+    answer: 'فعل مضارع مجزوم لأنه فعل الشرط',
+    hint: 'أداة الشرط الجازمة تجزم فعلين',
+    category: 'شرط'
+  },
+  {
+    id: 24,
+    question: 'أي من الجمل التالية تتضمن أسلوب شرط جازم مكتمل الأركان؟',
+    choices: ['من يقرأ كثيراً', 'إن تزرع', 'متى تستقم تسعد', 'أينما الخير'],
+    answer: 'متى تستقم تسعد',
+    hint: 'لا بد من وجود أداة شرط + فعل شرط + جواب شرط',
+    category: 'شرط'
+  },
+  {
+    id: 25,
+    question: 'ما علامة جزم الفعل المضارع في فعل الشرط "من يتقِ الله يجعل له مخرجاً"؟',
+    choices: ['السكون', 'حذف حرف العلة', 'الكسرة', 'حذف النون'],
+    answer: 'حذف حرف العلة',
+    hint: 'الفعل "يتقِ" معتل الآخر',
+    category: 'شرط'
+  },
+  {
+    id: 26,
+    question: 'ما الركن المفقود في جملة "إن تدرس"؟',
+    choices: ['أداة الشرط', 'فعل الشرط', 'جواب الشرط', 'المفعول به'],
+    answer: 'جواب الشرط',
+    hint: 'الشرط يحتاج إلى جواب يتمم المعنى',
+    category: 'شرط'
+  },
+  {
+    id: 27,
+    question: 'في أي جملة اقترن جواب الشرط بالفاء وجوباً؟',
+    choices: ['من يزرع يحصد', 'إن تدرس تنجح', 'من يجتهد فهو ناجح', 'متى تذهب أذهب'],
+    answer: 'من يجتهد فهو ناجح',
+    hint: 'جواب الشرط جملة اسمية فوجب اقترانها بالفاء',
+    category: 'شرط'
+  },
+  {
+    id: 28,
+    question: 'ما نوع "ما" في جملة "ما تفعل من خير يعلمه الله"؟',
+    choices: ['نافية', 'موصولة', 'شرطية جازمة', 'استفهامية'],
+    answer: 'شرطية جازمة',
+    hint: 'هي أداة شرط تجزم فعلين',
+    category: 'شرط'
+  },
+  {
+    id: 29,
+    question: 'أي من الجمل التالية فيها خطأ في استخدام أسلوب الشرط الجازم؟',
+    choices: ['من يدرس ينجح', 'إن تجتهد سوف تنجح', 'متى تصل أخبرني', 'أينما تذهب تجد الخير'],
+    answer: 'إن تجتهد سوف تنجح',
+    hint: 'جواب الشرط لا يبدأ بـ "سوف"',
+    category: 'شرط'
+  },
+  {
+    id: 30,
+    question: 'ما الضبط الصحيح لجواب الشرط في جملة "من يعمل صالحاً ... أجره"؟',
+    choices: ['يضاعفُ', 'يضاعفْ', 'يضاعفَ', 'يضاعفِ'],
+    answer: 'يضاعفْ',
+    hint: 'فعل مضارع مجزوم لأنه جواب الشرط',
+    category: 'شرط'
+  }
+];
 
-    const correctResult=document.getElementById('correctResult');
-    const wrongResult=document.getElementById('wrongResult');
-    const correctMsg=document.getElementById('correctMsg');
-    const wrongMsg=document.getElementById('wrongMsg');
+    const grid = document.getElementById('grid');
+    const qTitle = document.getElementById('qTitle');
+    const qBody = document.getElementById('qBody');
+    const choicesEl = document.getElementById('choices');
+    const submitBtn = document.getElementById('submitBtn');
+    const backBtn = document.getElementById('backBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const hintBox = document.getElementById('hintBox');
+    const hintText = document.getElementById('hintText');
 
-    let currentQuestion=null;
-    let currentChoiceIndex=null;
-    let lockedQuestions={};
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalTips = document.getElementById('modalTips');
+    const modalClose = document.getElementById('modalClose');
+    const nextQuestionBtn = document.getElementById('nextQuestion');
+    
+    const questionModalBackdrop = document.getElementById('questionModalBackdrop');
+    const questionModal = document.getElementById('questionModal');
 
-    function renderGrid(){
-      grid.innerHTML='';
-      for(let i=1;i<=30;i++){
-        const tile=document.createElement('div');
-        tile.className='tile';
-        const q=QUESTIONS.find(x=>x.id===i);
-        if(!q){tile.classList.add('locked');}
-        if(lockedQuestions[i] && lockedQuestions[i]>0){tile.classList.add('disabled');}
-        tile.innerHTML=`<span>${i}</span>`;
-        tile.addEventListener('click',()=>{ if(q && !(lockedQuestions[i]>0)) openQuestion(q); });
+    // Stats elements
+    const totalQuestionsEl = document.getElementById('totalQuestions');
+    const answeredQuestionsEl = document.getElementById('answeredQuestions');
+    const correctAnswersEl = document.getElementById('correctAnswers');
+    const scorePercentageEl = document.getElementById('scorePercentage');
+    const progressFill = document.getElementById('progressFill');
+    const timerValue = document.getElementById('timerValue');
+
+    let currentQuestion = null;
+    let currentChoiceIndex = null;
+    let answeredQuestions = {};
+    let questionsToReview = {};
+    let timerInterval = null;
+    let seconds = 0;
+    let questionCounter = 0;
+
+    // Initialize the app
+    function init() {
+      renderGrid();
+      updateStats();
+      startTimer();
+    }
+
+    function renderGrid() {
+      grid.innerHTML = '';
+      
+      totalQuestionsEl.textContent = QUESTIONS.length;
+      
+      for (let i = 1; i <= QUESTIONS.length; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        const q = QUESTIONS.find(x => x.id === i);
+        
+        if (answeredQuestions[q.id]) {
+          if (answeredQuestions[q.id].correct) {
+            tile.classList.add('correct');
+          } else {
+            tile.classList.add('incorrect');
+            // بعد 3 أسئلة، أعد فتح السؤال الخاطئ
+            if (questionCounter - answeredQuestions[q.id].lastSeen >= 3) {
+              delete answeredQuestions[q.id];
+              tile.classList.remove('incorrect');
+            }
+          }
+        }
+        
+        tile.innerHTML = `<span>${i}</span>`;
+        
+        // السماح بفتح الأسئلة التي لم يتم الإجابة عليها
+        if (!answeredQuestions[q.id]) {
+          tile.addEventListener('click', () => openQuestion(q));
+        } else {
+          tile.addEventListener('click', () => {
+            alert('لقد أجبت على هذا السؤال مسبقاً');
+          });
+        }
+        
         grid.appendChild(tile);
       }
     }
 
-    function openQuestion(q){
-      currentQuestion=q;
-      qTitle.textContent=`السؤال ${q.id}`;
-      qBody.textContent=q.question;
-      choicesEl.innerHTML='';
-      q.choices.forEach((c,idx)=>{
-        const d=document.createElement('div');
-        d.className='choice';
-        d.textContent=c;
-        d.dataset.idx=idx;
-        d.addEventListener('click',()=>{
-          document.querySelectorAll('.choice').forEach(x=>x.style.outline='');
-          d.style.outline='2px solid rgba(255,255,255,0.3)';
-          currentChoiceIndex=idx;
+    function openQuestion(q) {
+      currentQuestion = q;
+      qTitle.textContent = `السؤال ${q.id}`;
+      qBody.textContent = q.question;
+      choicesEl.innerHTML = '';
+      currentChoiceIndex = null;
+      hintBox.style.display = 'none';
+      hintBtn.style.display = 'inline-block';
+      
+      q.choices.forEach((c, idx) => {
+        const d = document.createElement('div');
+        d.className = 'choice';
+        d.textContent = c;
+        d.dataset.idx = idx;
+        d.addEventListener('click', () => {
+          document.querySelectorAll('#choices .choice').forEach(x => x.style.outline = '');
+          d.style.outline = '2px solid rgba(255,255,255,0.3)';
+          currentChoiceIndex = idx;
         });
         choicesEl.appendChild(d);
       });
-      correctResult.classList.remove('show');
-      wrongResult.classList.remove('show');
-      qPanel.classList.add('active');
+      
+      questionModalBackdrop.classList.add('show');
     }
 
-    function checkAnswer(){
-      const q=currentQuestion; if(!q) return;
-      if(currentChoiceIndex===null){alert('اختر خيارًا');return;}
-      const selected=q.choices[currentChoiceIndex];
-      const ok=selected.trim().toLowerCase()===q.answer.trim().toLowerCase();
-      if(ok){
-        showCorrect(q);
+    function checkAnswer() {
+      const q = currentQuestion;
+      if (!q) return;
+      
+      if (currentChoiceIndex === null) {
+        alert('اختر خيارًا');
+        return;
+      }
+      
+      const selected = q.choices[currentChoiceIndex];
+      const isCorrect = selected.trim().toLowerCase() === q.answer.trim().toLowerCase();
+      
+      // Mark question as answered
+      answeredQuestions[q.id] = {
+        correct: isCorrect,
+        answer: selected,
+        lastSeen: questionCounter
+      };
+      
+      // زيادة عداد الأسئلة
+      questionCounter++;
+      
+      // Update stats
+      updateStats();
+      
+      // Close the question modal
+      questionModalBackdrop.classList.remove('show');
+      
+      // Show result modal
+      showModal(isCorrect, q);
+    }
+
+    function showModal(isCorrect, q) {
+      if (isCorrect) {
+        modalTitle.textContent = 'صح ✅';
+        modalMessage.textContent = 'إجابتك صحيحة!';
+        modalTips.textContent = '';
+        nextQuestionBtn.style.display = 'inline-block';
       } else {
-        showWrong(q);
+        modalTitle.textContent = 'خطأ ❌';
+        modalMessage.textContent = `الإجابة الصحيحة هي: ${q.answer}`;
+        modalTips.textContent = q.hint ? `تلميح: ${q.hint}` : 'حاول مرة أخرى';
+        nextQuestionBtn.style.display = 'none';
+      }
+      
+      modalBackdrop.classList.add('show');
+    }
+
+    function updateStats() {
+      const total = QUESTIONS.length;
+      const answered = Object.keys(answeredQuestions).length;
+      const correct = Object.values(answeredQuestions).filter(a => a.correct).length;
+      const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
+      
+      answeredQuestionsEl.textContent = answered;
+      correctAnswersEl.textContent = correct;
+      scorePercentageEl.textContent = `${percentage}%`;
+      progressFill.style.width = `${percentage}%`;
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      seconds = 0;
+      
+      timerInterval = setInterval(() => {
+        seconds++;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function showHint() {
+      if (currentQuestion && currentQuestion.hint) {
+        hintText.textContent = currentQuestion.hint;
+        hintBox.style.display = 'block';
+        hintBtn.style.display = 'none';
       }
     }
 
-    function showCorrect(q){
-      correctResult.classList.add('show');
-      wrongResult.classList.remove('show');
-      // بعد الصح يرجع للشبكة
-      setTimeout(()=>{qPanel.classList.remove('active');correctResult.classList.remove('show');renderGrid();},1200);
-    }
-
-    function showWrong(q){
-      wrongResult.classList.add('show');
-      correctResult.classList.remove('show');
-      // يقفل السؤال مؤقتاً لسؤالين
-      lockedQuestions[q.id]=2;
-      setTimeout(()=>{qPanel.classList.remove('active');wrongResult.classList.remove('show');renderGrid();},1500);
-    }
-
-    function decreaseLocks(){
-      for(const id in lockedQuestions){
-        if(lockedQuestions[id]>0){lockedQuestions[id]--;}
+    function getNextQuestion() {
+      // الأسئلة غير المجابة
+      const unanswered = QUESTIONS.filter(q => !answeredQuestions[q.id]);
+      
+      if (unanswered.length > 0) {
+        const randomIndex = Math.floor(Math.random() * unanswered.length);
+        openQuestion(unanswered[randomIndex]);
+      } else {
+        alert('تهانينا! لقد أجبت على جميع الأسئلة.');
       }
+    }
+
+    // Event listeners
+    modalClose.addEventListener('click', () => {
+      modalBackdrop.classList.remove('show');
       renderGrid();
-    }
+    });
 
-    submitBtn.addEventListener('click',()=>{checkAnswer();decreaseLocks();});
-    backBtn.addEventListener('click',()=>{qPanel.classList.remove('active');});
+    nextQuestionBtn.addEventListener('click', () => {
+      modalBackdrop.classList.remove('show');
+      getNextQuestion();
+    });
 
-    renderGrid();
+    submitBtn.addEventListener('click', () => checkAnswer());
+    backBtn.addEventListener('click', () => questionModalBackdrop.classList.remove('show'));
+    hintBtn.addEventListener('click', () => showHint());
+
+    // Initialize the app
+    init();
   </script>
 </body>
 </html>
